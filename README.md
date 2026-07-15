@@ -1,2 +1,2 @@
 # MyPythonTrajectory
-Just a repo to learn python
+dont mind this, just me learning python.
