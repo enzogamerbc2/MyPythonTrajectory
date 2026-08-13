@@ -42,19 +42,6 @@ y_test = torch.FloatTensor(y_test).long()
 criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr = 0.01)
 
-# Training loop
-print("---Starting Training---")
-for epoch in range(100):
-    y_pred = model(X_train)
-    loss = criterion(y_pred, y_train)
-
-    optimizer.zero_grad()
-    loss.backward()
-    optimizer.step()
-
-    if epoch % 10 == 0:
-        print(f"Epoch: {epoch:2d} | Loss: {loss.item():.4f}")
-
 # Evaluation
 print("\n--- Evaluating Model ---")
 with torch.no_grad():
@@ -68,41 +55,50 @@ print(f"Final Test Accuracy: {accuracy:.2f}%\n")
 url = 'https://gist.githubusercontent.com/curran/a08a1080b88344b0c8a7/raw/0e7a9b0a5d22642a06d3d5b9bcbad9890c8ee534/iris.csv'
 my_df = pd.read_csv(url)
 
-my_df['variety'] = my_df['variety'].replace({'Setosa': 0.0})
-my_df['variety'] = my_df['variety'].replace({'Versicolor': 1.0})
-my_df['variety'] = my_df['variety'].replace({'Virginica': 2.0})
+# Replace classes by int numbers directly
+my_df['species'] = my_df['species'].replace({
+    'setosa': 0, 
+    'versicolor': 1, 
+    'virginica': 2
+})
 
-# Convert these to numpy arrays for training and testing
-X = my_df.drop('variety', axis = 1)
-y = my_df['variety']
-
-X = X.values
-y = y.values
+# Extract dataframe data into numpy arrays
+X_np = my_df.drop('species', axis=1).values
+y_np = my_df['species'].values.astype(int)
 
 # Train test split
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 73)
+X_train, X_test, y_train, y_test = train_test_split(X_np, y_np, test_size=0.2, random_state=73)
 
-# Convert X features to float tensors and y labels to long tensors
+# Convert to pyTorch tensors
 X_train = torch.FloatTensor(X_train)
 X_test = torch.FloatTensor(X_test)
-y_train = torch.LongTensor(y_train)
-y_test = torch.LongTensor(y_test)
+y_train = torch.tensor(y_train, dtype=torch.long)
+y_test = torch.tensor(y_test, dtype=torch.long)
 
-# Set the criterion of model to measure the error, how far off the predictions are from the data
+# Criterion and optimizer
 criterion = nn.CrossEntropyLoss()
-# Choose adam optimizer, lr = learning rate
-optimizer = torch.optim.Adam(model.parameters(), lr = 0.01)
+optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
 
-# Train our model
+# Training the model
 epochs = 100
 losses = []
 
 for i in range(epochs):
-    y_pred = model.forward(X_train)
+    y_pred = model(X_train)
     loss = criterion(y_pred, y_train)
+
+    losses.append(loss.item())
+
+    if i % 10 == 0:
+        print(f"Epoch: {i} and Loss: {loss.item()}")
 
     optimizer.zero_grad()
     loss.backward()
     optimizer.step()
 
-    losses.append(loss.item())
+# Graph it out
+plt.plot(range(epochs), losses)
+plt.ylabel('loss/error')
+plt.xlabel('Epoch')
+
+plt.show()
