@@ -1,2 +1,6 @@
 name = input("What's your name? ")
-print("Hi, {}!".format(name))
+
+if name.isalpha():
+    print(f"Hi, {name}!")
+else:
+    print("Invalid input!")
